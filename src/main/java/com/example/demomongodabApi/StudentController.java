@@ -60,6 +60,40 @@ public class StudentController {
 
         }
     }
+    @PutMapping("/student/{id}")
+    public ResponseEntity<?> updateSingleStudent(@PathVariable("id") String id,@RequestBody Student student){
+
+        Optional<Student> studentOptional=studentRepo.findById(id);
+        if (studentOptional.isPresent()){
+            Student studentsave = studentOptional.get();
+            studentsave.setFristName(student.getFristName() != null ? student.getFristName() : studentsave.getFristName());
+            studentsave.setLastName(student.getLastName() != null ? student.getLastName() : studentsave.getLastName());
+            studentsave.setEmail(student.getEmail() != null ? student.getEmail() : studentsave.getEmail());
+            studentsave.setGender(student.getGender() != null ? student.getGender() : studentsave.getGender());
+            studentsave.setAddress(student.getAddress() != null ? student.getAddress() : studentsave.getAddress());
+            studentsave.setSubjects(student.getSubjects() != null ? student.getSubjects() : studentsave.getSubjects());
+            studentsave.setSpendInBook(student.getSpendInBook() != null ? student.getSpendInBook() : studentsave.getSpendInBook());
+            studentsave.setTime(new Date(System.currentTimeMillis()));
+            studentRepo.save(studentsave);
+            return new ResponseEntity<>(studentsave,HttpStatus.OK);
+
+        }
+        else {
+
+            return new ResponseEntity<>("Student not found with "+id , HttpStatus.NOT_FOUND);
+
+        }
+    }
+    @DeleteMapping("/student/{id}")
+    public ResponseEntity<?> deleteById(@PathVariable("id") String id){
+        try{
+            studentRepo.deleteById(id);
+            return new ResponseEntity<>("student "+id+" deleted",HttpStatus.OK);
+        }
+        catch (Exception e){
+            return new ResponseEntity<>(e.getMessage(),HttpStatus.NOT_FOUND);
+        }
+    }
 
 
 }

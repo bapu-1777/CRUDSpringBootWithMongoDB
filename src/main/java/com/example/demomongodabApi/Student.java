@@ -5,6 +5,7 @@ import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 import java.util.Date;
@@ -18,6 +19,8 @@ public class Student {
 
     @Id
     private String id;
+
+    @NotNull(message = "not be null")
     private String fristName;
     private String lastName;
     private String email;
