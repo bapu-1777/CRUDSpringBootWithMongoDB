@@ -6,6 +6,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 import java.util.Date;
@@ -21,7 +22,11 @@ public class Student {
     private String id;
 
     @NotNull(message = "not be null")
+    @Size(min = 2, max = 20, message = "Please enter your firstName in 2 to 20 chanractors")
     private String fristName;
+
+    @NotNull(message = "not be null")
+    @Size(min = 2, max = 20, message = "Please enter your lastName in 2 to 20 chanractors")
     private String lastName;
     private String email;
     private String gender;

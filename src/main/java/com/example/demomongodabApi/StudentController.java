@@ -1,23 +1,37 @@
 package com.example.demomongodabApi;
 
 
+
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Filters;
+import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.aggregation.MatchOperation;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Repository;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
+import java.util.*;
 
-import java.time.ZonedDateTime;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import static com.mongodb.client.model.Aggregates.match;
 
 @RestController
 public class StudentController {
 
     @Autowired
     private StudentRepo studentRepo;
+
+    @Autowired
+    MongoTemplate mongoTemplate;
 
     @GetMapping("/student")
     public ResponseEntity<?> getAllStudent(){
@@ -29,17 +43,16 @@ public class StudentController {
         }
     }
     @PostMapping("/student")
-    public ResponseEntity<?> putStudent(@RequestBody Student student){
+    public ResponseEntity<?> putStudent(@Valid @RequestBody Student student){
 
         try{
             student.setTime(new Date(System.currentTimeMillis()));
             studentRepo.save(student);
+
             return new ResponseEntity<Student>(student,HttpStatus.OK);
-        }
-        catch (Exception e){
+        } catch (Exception e){
 
             return new ResponseEntity<>(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
-
 
         }
 
@@ -92,6 +105,76 @@ public class StudentController {
         }
         catch (Exception e){
             return new ResponseEntity<>(e.getMessage(),HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @GetMapping("/agre")
+    public ResponseEntity<?> byAgregetion(){
+        String data;
+        List<Student> allStudents =studentRepo.findAll();
+        if (allStudents.size()>0){
+
+            String uri = "mongodb://localhost:27017";
+            MongoClient mongoClient = MongoClients.create(uri);
+            MongoDatabase database = mongoClient.getDatabase("mayank");
+            MongoCollection<Document> collection = database.getCollection("Student");
+            collection.aggregate(
+                    Arrays.asList(
+                            match(Filters.eq("lastName","Vekariya"))
+//                            Aggregates.group("$spendInBook", Accumulators.sum("count", 1))
+                    )
+            ).forEach(doc -> System.out.println(doc.toJson()));
+            return new ResponseEntity<List<Student>>(allStudents, HttpStatus.OK);
+        }else {
+            return new ResponseEntity<>("NO Student available",HttpStatus.NOT_FOUND);
+        }
+    }
+    @GetMapping("/agres")
+    public ResponseEntity<List<Document>> byAgregetionreturn(){
+
+        List<Student> allStudents =studentRepo.findAll();
+        if (allStudents.size()>0){
+
+            String uri = "mongodb://localhost:27017";
+            MongoClient mongoClient = MongoClients.create(uri);
+            MongoDatabase database = mongoClient.getDatabase("mayank");
+            MongoCollection<Document> collection = database.getCollection("Student");
+            Bson match = match(Filters.eq("lastName", "Vekariya"));
+            List<Document> results = collection.aggregate(Arrays.asList(match))
+                    .into(new ArrayList<>());
+//            System.out.println(results);
+//            Gson gson = new Gson();
+//            String jsonCartList = gson.toJson(results);
+
+
+
+            return  ResponseEntity.ok(results);
+        }else {
+            return  ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+    }
+
+    @GetMapping("/agress")
+    public ResponseEntity<List<Student>> byAgregetionreturntemplet(){
+
+        List<Student> allStudents =studentRepo.findAll();
+        if (allStudents.size()>0){
+
+            MatchOperation matchStage = Aggregation.match(new Criteria("fristName").is("mayank"));
+
+
+            Aggregation aggregation
+                    = Aggregation.newAggregation(matchStage);
+
+            AggregationResults<Student> output
+                    = mongoTemplate.aggregate(aggregation, "Student", Student.class);
+
+
+
+
+            return  ResponseEntity.ok(output.getMappedResults());
+        }else {
+            return  ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
 
