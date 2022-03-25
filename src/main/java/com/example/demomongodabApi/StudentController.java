@@ -178,5 +178,16 @@ public class StudentController {
         }
     }
 
+    @GetMapping("/mongo")
+    public ResponseEntity<?> byjs(){
 
+
+            String uri = "mongodb://localhost:27017";
+            MongoClient mongoClient = MongoClients.create(uri);
+            MongoDatabase database = mongoClient.getDatabase("mayank");
+//            return database.doEval("addNumbers(3,4)").toString();
+        Document doc1 = database.runCommand(new Document("db.loadServerScripts()","addNumbers(4,5)"));
+        System.out.println(doc1);
+        return null;
+    }
 }
